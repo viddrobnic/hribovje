@@ -19,5 +19,7 @@
 mod area;
 mod point;
 
+pub mod data;
+
 pub use area::*;
 pub use point::*;
