@@ -20,6 +20,7 @@ mod area;
 mod point;
 
 pub mod data;
+pub mod qtree;
 
 pub use area::*;
 pub use point::*;

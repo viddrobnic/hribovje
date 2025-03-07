@@ -1,5 +1,5 @@
 /// A data point on the map in D96/TM format.
-#[derive(Debug, Clone, Copy, PartialEq)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct Point {
     pub x: f32,
     pub y: f32,
