@@ -108,6 +108,16 @@ impl QuadTree {
 
         Ok(idx)
     }
+
+    /// Finds the point nearest to the given point.
+    ///
+    /// Point by which you query, has to be in the area of the tree.
+    /// If the tree is empty, None is returned.
+    pub fn nearest<'a>(&'a self, point: &Point) -> Result<Option<&'a Point>, QueryError> {
+        self.0
+            .nearest(point)
+            .map(|opt_point| opt_point.map(|(_, p)| p))
+    }
 }
 
 impl Node {
@@ -190,6 +200,39 @@ impl Node {
         Ok(())
     }
 
+    fn nearest(&self, point: &Point) -> Result<Option<(f32, &Point)>, QueryError> {
+        if !self.area.is_point_inside(point) {
+            return Err(QueryError::OutsideArea);
+        }
+
+        let res = match &self.inner {
+            NodeInner::Intermediate { nw, ne, sw, se } => {
+                let mut res = None;
+
+                if nw.area.is_point_inside(point) {
+                    res = min_point(res, nw.nearest(point)?);
+                }
+                if ne.area.is_point_inside(point) {
+                    res = min_point(res, nw.nearest(point)?);
+                }
+                if sw.area.is_point_inside(point) {
+                    res = min_point(res, nw.nearest(point)?);
+                }
+                if se.area.is_point_inside(point) {
+                    res = min_point(res, nw.nearest(point)?);
+                }
+
+                res
+            }
+            NodeInner::Leaf { points } => points.iter().fold(None, |acc, p| {
+                let distance = p.distance_sq(point);
+                min_point(acc, Some((distance, p)))
+            }),
+        };
+
+        Ok(res)
+    }
+
     fn new_leaf(area: Area) -> Self {
         Self {
             area,
@@ -259,6 +302,24 @@ impl Node {
             NodeInner::Leaf { points } => points.len(),
             NodeInner::Intermediate { nw, ne, sw, se } => {
                 nw.size() + ne.size() + sw.size() + se.size()
+            }
+        }
+    }
+}
+
+fn min_point<'a>(
+    a: Option<(f32, &'a Point)>,
+    b: Option<(f32, &'a Point)>,
+) -> Option<(f32, &'a Point)> {
+    match (a, b) {
+        (None, None) => None,
+        (None, Some(x)) => Some(x),
+        (Some(x), None) => Some(x),
+        (Some((dist_a, point_a)), Some((dist_b, point_b))) => {
+            if dist_a < dist_b {
+                Some((dist_a, point_a))
+            } else {
+                Some((dist_b, point_b))
             }
         }
     }
