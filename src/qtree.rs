@@ -78,8 +78,12 @@ impl QuadTree {
     /// this method will panic.
     pub fn query(&mut self, area: &Area, results: &mut [Point]) -> Result<usize, QueryError> {
         let mut idx = 0;
-        self.0
-            .query(area, |points, idx| points[idx].clone(), results, &mut idx)?;
+        self.0.query(
+            area,
+            |points, idx| (points[idx].clone(), true),
+            results,
+            &mut idx,
+        )?;
 
         Ok(idx)
     }
@@ -101,7 +105,7 @@ impl QuadTree {
 
         self.0.query(
             area,
-            |points, idx| points.swap_remove(idx),
+            |points, idx| (points.swap_remove(idx), false),
             results,
             &mut idx,
         )?;
@@ -161,7 +165,7 @@ impl Node {
         idx: &mut usize,
     ) -> Result<(), QueryError>
     where
-        F: Fn(&mut Vec<Point>, usize) -> Point + Copy,
+        F: Fn(&mut Vec<Point>, usize) -> (Point, bool) + Copy,
     {
         if !self.area.intersects(area) {
             return Err(QueryError::OutsideArea);
@@ -190,9 +194,13 @@ impl Node {
                         continue;
                     }
 
-                    let point = get_point(points, i);
+                    let (point, increase_i) = get_point(points, i);
                     results[*idx] = point;
                     *idx += 1;
+
+                    if increase_i {
+                        i += 1
+                    }
                 }
             }
         }
