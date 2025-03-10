@@ -260,7 +260,7 @@ impl Node {
             center: Point {
                 x: area.center.x - r,
                 y: area.center.y - r,
-                z: 0.0,
+                data: (),
             },
             radius: r,
         };
@@ -268,7 +268,7 @@ impl Node {
             center: Point {
                 x: area.center.x + r,
                 y: area.center.y - r,
-                z: 0.0,
+                data: (),
             },
             radius: r,
         };
@@ -276,7 +276,7 @@ impl Node {
             center: Point {
                 x: area.center.x - r,
                 y: area.center.y + r,
-                z: 0.0,
+                data: (),
             },
             radius: r,
         };
@@ -284,7 +284,7 @@ impl Node {
             center: Point {
                 x: area.center.x + r,
                 y: area.center.y + r,
-                z: 0.0,
+                data: (),
             },
             radius: r,
         };

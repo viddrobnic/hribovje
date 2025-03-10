@@ -27,14 +27,14 @@ pub type ImportResult = Result<(), ImportError>;
 struct PointWriter<W: io::Write>(W);
 
 impl<W: io::Write> PointWriter<W> {
-    fn write(&mut self, point: &Point) -> Result<(), io::Error> {
+    fn write(&mut self, point: &Point<f32>) -> Result<(), io::Error> {
         let buf = point.x.to_le_bytes();
         self.0.write_all(&buf)?;
 
         let buf = point.y.to_le_bytes();
         self.0.write_all(&buf)?;
 
-        let buf = point.z.to_le_bytes();
+        let buf = point.data.to_le_bytes();
         self.0.write_all(&buf)?;
 
         Ok(())
@@ -44,7 +44,7 @@ impl<W: io::Write> PointWriter<W> {
 struct PointReader<R: io::Read>(R);
 
 impl<R: io::Read> PointReader<R> {
-    fn read(&mut self) -> Result<Vec<Point>, io::Error> {
+    fn read(&mut self) -> Result<Vec<Point<f32>>, io::Error> {
         let mut points = vec![];
 
         let mut comps = [0f32; 3];
@@ -62,7 +62,7 @@ impl<R: io::Read> PointReader<R> {
                         points.push(Point {
                             x: comps[0],
                             y: comps[1],
-                            z: comps[2],
+                            data: comps[2],
                         });
                         comp_idx = 0;
                     }
@@ -81,20 +81,24 @@ impl<R: io::Read> PointReader<R> {
 
 /// Read points from provided reader.
 ///
+/// Returned points contain height as data.
+///
 /// If reading from file, you should wrap it into
 /// [BufReader](https://doc.rust-lang.org/std/io/struct.BufReader.html)
 /// to improve the performance.
-pub fn read_points(reader: impl io::Read) -> Result<Vec<Point>, io::Error> {
+pub fn read_points(reader: impl io::Read) -> Result<Vec<Point<f32>>, io::Error> {
     let mut reader = PointReader(reader);
     reader.read()
 }
 
 /// Write points to provided reader.
 ///
+/// Write points that have height as additional data.
+///
 /// If writing to file, you should wrap it into
 /// [BufWriter](https://doc.rust-lang.org/std/io/struct.BufWriter.html)
 /// to improve the performance.
-pub fn write_points(writer: impl io::Write, points: &[Point]) -> Result<(), io::Error> {
+pub fn write_points(writer: impl io::Write, points: &[Point<f32>]) -> Result<(), io::Error> {
     let mut writer = PointWriter(writer);
     for p in points {
         writer.write(p)?;
@@ -163,7 +167,7 @@ fn import_file<W: io::Write>(input: impl AsRef<Path>, writer: &mut PointWriter<W
         writer.write(&Point {
             x: arr[0].ok_or(ImportError::InvalidData(0))?,
             y: arr[1].ok_or(ImportError::InvalidData(1))?,
-            z: arr[2].ok_or(ImportError::InvalidData(2))?,
+            data: arr[2].ok_or(ImportError::InvalidData(2))?,
         })?;
     }
 
@@ -186,12 +190,12 @@ mod tests {
             Point {
                 x: 0.5,
                 y: 1.0,
-                z: -1.2,
+                data: -1.2,
             },
             Point {
                 x: 2.0,
                 y: 3.0,
-                z: -4.0,
+                data: -4.0,
             },
         ];
         for p in &points {

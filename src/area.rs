@@ -29,7 +29,7 @@ impl Area {
             center: Point {
                 x: width / 2.0 + min_x,
                 y: height / 2.0 + min_y,
-                z: 0.0,
+                data: (),
             },
             radius: width.max(height) / 2.0,
         }
@@ -70,7 +70,7 @@ mod tests {
                     center: Point {
                         x: 0.0,
                         y: 0.0,
-                        z: 0.0,
+                        data: (),
                     },
                     radius: 1.0,
                 },
@@ -78,7 +78,7 @@ mod tests {
                     center: Point {
                         x: 0.0,
                         y: 0.0,
-                        z: 0.0,
+                        data: (),
                     },
                     radius: 1.0,
                 },
@@ -89,7 +89,7 @@ mod tests {
                     center: Point {
                         x: 0.0,
                         y: 0.0,
-                        z: 0.0,
+                        data: (),
                     },
                     radius: 1.0,
                 },
@@ -97,7 +97,7 @@ mod tests {
                     center: Point {
                         x: 2.0,
                         y: 2.0,
-                        z: 0.0,
+                        data: (),
                     },
                     radius: 1.0,
                 },
@@ -108,7 +108,7 @@ mod tests {
                     center: Point {
                         x: 0.0,
                         y: 0.0,
-                        z: 0.0,
+                        data: (),
                     },
                     radius: 1.0,
                 },
@@ -116,7 +116,7 @@ mod tests {
                     center: Point {
                         x: 2.0,
                         y: 2.0,
-                        z: 0.0,
+                        data: (),
                     },
                     radius: 0.9,
                 },
