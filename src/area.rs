@@ -9,7 +9,7 @@ pub struct Area {
 
 impl Area {
     /// Creates the minimum area that contains all the points
-    pub fn from_points(points: &[Point]) -> Self {
+    pub fn from_points<T>(points: &[Point<T>]) -> Self {
         let (min_x, min_y, max_x, max_y) = points.iter().fold(
             (f32::MAX, f32::MAX, f32::MIN, f32::MIN),
             |(min_x, min_y, max_x, max_y), p| {
@@ -36,7 +36,7 @@ impl Area {
     }
 
     /// Returns weather the point is inside the area.
-    pub fn is_point_inside(&self, point: &Point) -> bool {
+    pub fn is_point_inside<T>(&self, point: &Point<T>) -> bool {
         let x_inside =
             point.x >= self.center.x - self.radius && point.x <= self.center.x + self.radius;
         let y_inside =

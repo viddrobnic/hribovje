@@ -12,22 +12,22 @@ use crate::{Area, Point};
 const MAX_POINTS: usize = 1000;
 
 #[derive(Debug)]
-enum NodeInner {
+enum NodeInner<T> {
     Leaf {
-        points: Vec<Point>,
+        points: Vec<Point<T>>,
     },
     Intermediate {
-        nw: Box<Node>,
-        ne: Box<Node>,
-        sw: Box<Node>,
-        se: Box<Node>,
+        nw: Box<Node<T>>,
+        ne: Box<Node<T>>,
+        sw: Box<Node<T>>,
+        se: Box<Node<T>>,
     },
 }
 
 #[derive(Debug)]
-struct Node {
+struct Node<T> {
     area: Area,
-    inner: NodeInner,
+    inner: NodeInner<T>,
 }
 
 #[derive(Debug, Error)]
@@ -44,9 +44,9 @@ pub enum QueryError {
     OutsideArea,
 }
 
-pub struct QuadTree(Node);
+pub struct QuadTree<T>(Node<T>);
 
-impl QuadTree {
+impl<T> QuadTree<T> {
     /// Construct a new quad tree to insert points from specific bounds.
     ///
     /// This tree will only be able to insert and query points inside this area.
@@ -64,28 +64,8 @@ impl QuadTree {
     }
 
     /// Insert a new point into the tree.
-    pub fn insert(&mut self, point: Point) -> Result<(), InsertError> {
+    pub fn insert(&mut self, point: Point<T>) -> Result<(), InsertError> {
         self.0.insert(point)
-    }
-
-    /// Queries points inside the given area.
-    ///
-    /// Points are cloned from the tree and put into `results`.
-    /// The method returns number of points that have been written to results.
-    /// In other words, you are interested in `results[..return_value]`
-    ///
-    /// Warning: If there are more points in the area than length of the results,
-    /// this method will panic.
-    pub fn query(&mut self, area: &Area, results: &mut [Point]) -> Result<usize, QueryError> {
-        let mut idx = 0;
-        self.0.query(
-            area,
-            |points, idx| (points[idx].clone(), true),
-            results,
-            &mut idx,
-        )?;
-
-        Ok(idx)
     }
 
     /// Queries points inside the given area and removes them.
@@ -99,7 +79,7 @@ impl QuadTree {
     pub fn query_remove(
         &mut self,
         area: &Area,
-        results: &mut [Point],
+        results: &mut [Point<T>],
     ) -> Result<usize, QueryError> {
         let mut idx = 0;
 
@@ -117,15 +97,37 @@ impl QuadTree {
     ///
     /// Point by which you query, has to be in the area of the tree.
     /// If the tree is empty, None is returned.
-    pub fn nearest<'a>(&'a self, point: &Point) -> Result<Option<&'a Point>, QueryError> {
+    pub fn nearest<'a, U>(&'a self, point: &Point<U>) -> Result<Option<&'a Point<T>>, QueryError> {
         self.0
             .nearest(point)
             .map(|opt_point| opt_point.map(|(_, p)| p))
     }
 }
 
-impl Node {
-    fn insert(&mut self, point: Point) -> Result<(), InsertError> {
+impl<T: Clone> QuadTree<T> {
+    /// Queries points inside the given area.
+    ///
+    /// Points are cloned from the tree and put into `results`.
+    /// The method returns number of points that have been written to results.
+    /// In other words, you are interested in `results[..return_value]`
+    ///
+    /// Warning: If there are more points in the area than length of the results,
+    /// this method will panic.
+    pub fn query(&mut self, area: &Area, results: &mut [Point<T>]) -> Result<usize, QueryError> {
+        let mut idx = 0;
+        self.0.query(
+            area,
+            |points, idx| (points[idx].clone(), true),
+            results,
+            &mut idx,
+        )?;
+
+        Ok(idx)
+    }
+}
+
+impl<T> Node<T> {
+    fn insert(&mut self, point: Point<T>) -> Result<(), InsertError> {
         if !self.area.is_point_inside(&point) {
             return Err(InsertError::OutsideArea);
         }
@@ -161,11 +163,11 @@ impl Node {
         &mut self,
         area: &Area,
         get_point: F,
-        results: &mut [Point],
+        results: &mut [Point<T>],
         idx: &mut usize,
     ) -> Result<(), QueryError>
     where
-        F: Fn(&mut Vec<Point>, usize) -> (Point, bool) + Copy,
+        F: Fn(&mut Vec<Point<T>>, usize) -> (Point<T>, bool) + Copy,
     {
         if !self.area.intersects(area) {
             return Err(QueryError::OutsideArea);
@@ -208,7 +210,7 @@ impl Node {
         Ok(())
     }
 
-    fn nearest(&self, point: &Point) -> Result<Option<(f32, &Point)>, QueryError> {
+    fn nearest<U>(&self, point: &Point<U>) -> Result<Option<(f32, &Point<T>)>, QueryError> {
         if !self.area.is_point_inside(point) {
             return Err(QueryError::OutsideArea);
         }
@@ -315,10 +317,10 @@ impl Node {
     }
 }
 
-fn min_point<'a>(
-    a: Option<(f32, &'a Point)>,
-    b: Option<(f32, &'a Point)>,
-) -> Option<(f32, &'a Point)> {
+fn min_point<'a, T>(
+    a: Option<(f32, &'a Point<T>)>,
+    b: Option<(f32, &'a Point<T>)>,
+) -> Option<(f32, &'a Point<T>)> {
     match (a, b) {
         (None, None) => None,
         (None, Some(x)) => Some(x),

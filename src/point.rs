@@ -10,7 +10,7 @@ pub struct Point<T = ()> {
 
 impl<T> Point<T> {
     /// Returns squared distance between two points.
-    pub fn distance_sq(&self, other: &Self) -> f32 {
+    pub fn distance_sq<U>(&self, other: &Point<U>) -> f32 {
         let dx = self.x - other.x;
         let dy = self.y - other.y;
 
@@ -18,7 +18,7 @@ impl<T> Point<T> {
     }
 
     /// Returns distance between two points in meters.
-    pub fn distance(&self, other: &Self) -> f32 {
+    pub fn distance<U>(&self, other: &Point<U>) -> f32 {
         self.distance_sq(other).sqrt()
     }
 }
