@@ -8,7 +8,7 @@ pub struct Point<T = ()> {
     pub data: T,
 }
 
-impl Point {
+impl<T> Point<T> {
     /// Returns squared distance between two points.
     pub fn distance_sq(&self, other: &Self) -> f32 {
         let dx = self.x - other.x;
